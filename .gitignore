@@ -1,0 +1,71 @@
+# Generated data
+data/sources/cz/*.gml
+data/sources/cz/*.zip
+data/sources/fr/*.gml
+data/sources/fr/*.zip
+data/output/*.pmtiles
+data/sources/*/*/
+data/sources/*/geojsonseq/*.geojsonseq
+data/sources/*/geojsonseq/*.tmp*
+data/sources/*/dataset_feeds.txt
+
+# Temporary processing files
+/tmp/amx-26*
+countries/*/temp/
+countries/*/tmp/
+
+# ATOM feed (regenerate with 'just fetch-feed')
+# Keep cz.json for reference, but regenerate if outdated:
+# data/sources/cz/cz.json
+# data/sources/cz/dataset_feeds.txt
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+query_results.log
+
+# Other
+.env
+.envrc
