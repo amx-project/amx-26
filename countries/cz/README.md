@@ -30,9 +30,9 @@ just upload cz
 ```
 
 **Pipeline Details**:
-- `download` produces: `/tmp/amx-26-cz/combined.geojsonseq`
+- `download` produces per-resource GeoJSONSeq files in `data/sources/cz/geojsonseq/`
 - `inspect-data` shows statistics and sample entries (for verification)
-- `convert` reads combined.geojsonseq and generates PMTiles
+- `convert` streams GeoJSONSeq files directly into tippecanoe (no combined temp file)
 
 **Feed Structure**:
 - Main ATOM feed: https://atom.cuzk.cz/CP/CP.xml (13,000+ dataset feeds)
@@ -42,7 +42,7 @@ just upload cz
 **Download outputs**:
 - `data/sources/cz/cz.json` - Main ATOM feed (JSON)
 - `data/sources/cz/dataset_feeds.txt` - List of dataset feed URLs
-- `data/sources/cz/*.gml` - Downloaded GML files
+- `data/sources/cz/geojsonseq/*.geojsonseq` - Per-resource GeoJSONSeq outputs
 
 ## Conversion Process
 
@@ -60,7 +60,21 @@ python countries/cz/scripts/convert.py
 Generated PMTiles file:
 - **Location**: `data/output/cz.pmtiles`
 - **Size**: (to be determined based on actual data)
-- **Zoom Levels**: (to be configured)
+- **Zoom Levels**:
+	- CadastralZoning: minzoom=5, maxzoom=13
+	- CadastralParcel: minzoom=14, maxzoom=18
+	- CadastralBoundary: minzoom=16, maxzoom=18
+
+## Precision and Tile Settings
+
+**Coordinate Precision**:
+- Source GML: 1cm precision (0.01m in S-JTSK coordinate system EPSG:5514)
+- Output GeoJSONSeq: 10 decimal places in WGS84 (0.01mm precision at 50°N latitude)
+- Setting: `ogr2ogr -lco COORDINATE_PRECISION=10`
+
+**Tippecanoe Settings**:
+- Do not drop features: `--no-feature-limit`
+- Increase per-tile size limit: `--maximum-tile-bytes 1000000`
 
 ## Status
 

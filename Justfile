@@ -154,6 +154,7 @@ clean COUNTRY:
 	rm -f data/output/{{COUNTRY}}.pmtiles
 	rm -f data/sources/{{COUNTRY}}/geojsonseq/*.geojsonseq
 	rm -f data/sources/{{COUNTRY}}/geojsonseq/*.tmp*
+	rm -f data/sources/{{COUNTRY}}/geojsonseq/.*.tmp*
 	echo "✓ Cleaned"
 
 # Clean all country outputs

@@ -106,6 +106,7 @@ just process cz
 - Files are written atomically (temporary name, then rename)
 - Existing files are skipped on subsequent runs for faster rebuilds
 - Layer-based `tippecanoe.minzoom/maxzoom` metadata is added during download
+- Conversion streams per-resource GeoJSONSeq directly to tippecanoe (no combined temp file)
 
 **Data Acquisition Strategy**:
 ```bash
@@ -115,6 +116,34 @@ yq -p xml '.feed.entry[] | select(.id == "...") | .link.@href' https://atom.cuzk
 # Automated download via download.sh script
 just download cz
 ```
+
+**Zoom Level Strategy**:
+- **CadastralZoning**: minzoom=5, maxzoom=13 (broad coverage, lightweight data)
+- **CadastralParcel**: minzoom=14, maxzoom=18 (transitions at z14 from CadastralZoning)
+- **CadastralBoundary**: minzoom=16, maxzoom=18 (high precision detail)
+- tippecanoe maxzoom: 18
+
+This ensures continuous coverage across all zoom levels without gaps where features disappear.
+
+**Coordinate Precision**:
+- Source GML: 1cm precision (0.01m in S-JTSK coordinate system EPSG:5514)
+- Output GeoJSONSeq: 10 decimal places in WGS84 (0.01mm precision at 50°N latitude)
+- Setting: `ogr2ogr -lco COORDINATE_PRECISION=10`
+- Rationale: Future-proof for millimeter-precision data while preserving original centimeter precision
+
+**Verification**:
+Zoom level distribution verified using tippecanoe-decode on actual tiles:
+- z5: CadastralZoning only (broad coverage)
+- z10: CadastralZoning only (continues until maxzoom=13)
+- z14: CadastralParcel appears (transitions from CadastralZoning)
+- z16: CadastralBoundary added (high-detail boundaries)
+- z18: CadastralParcel + CadastralBoundary (maximum detail)
+
+Note: PMTiles metadata shows global minzoom/maxzoom (0-18) for all layers, but actual tiles contain only the appropriate layers per zoom level as configured in GeoJSONSeq features.
+
+**Tippecanoe Settings**:
+- Do not drop features: `--no-feature-limit`
+- Increase per-tile size limit: `--maximum-tile-bytes 1000000`
 
 ### France (fr)
 - Status: Planned

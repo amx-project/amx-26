@@ -47,29 +47,23 @@ def main():
     print(f"  Directory: {geojsonseq_dir}")
     print()
 
-    # Step 2: Combine GeoJSONSeq files into a single stream
-    print("Step 2: Combining GeoJSONSeq files...")
-    with geojsonseq_file.open("wb") as combined:
-        for path in geojsonseq_files:
-            with path.open("rb") as source:
-                for chunk in iter(lambda: source.read(1024 * 1024), b""):
-                    combined.write(chunk)
-
-    line_count = sum(1 for _ in open(geojsonseq_file, "rb"))
-    size_mb = geojsonseq_file.stat().st_size / (1024 * 1024)
-    print(f"✓ Combined GeoJSONSeq: {geojsonseq_file}")
-    print(f"  Lines: {line_count}, Size: {size_mb:.1f} MB")
-    print()
-    
-    # Step 3: Generate PMTiles from GeoJSONSeq
-    print("Step 3: Generating PMTiles with tippecanoe...")
+    # Step 2: Stream GeoJSONSeq files to tippecanoe via shell pipe
+    # Use ls|grep|xargs to avoid wildcard length limits.
+    print("Step 2: Streaming GeoJSONSeq to tippecanoe...")
     try:
+        cmd = (
+            f'ls -1 "{geojsonseq_dir}" | '
+            r'grep -E "\.geojsonseq$" | '
+            f'sed "s#^#{geojsonseq_dir}/#" | '
+            f'xargs cat | tippecanoe -f -z 18 -Z 0 -o "{output_file}" --no-feature-limit --maximum-tile-bytes 1000000'
+        )
         result = subprocess.run(
-            ['tippecanoe', '-z', '14', '-Z', '0', '-o', str(output_file), 
-             '--drop-densest-as-needed', str(geojsonseq_file)],
+            cmd,
+            shell=True,
             capture_output=True,
             text=True,
-            timeout=600
+            timeout=600,
+            cwd=root_dir
         )
         
         if result.returncode == 0:
@@ -78,6 +72,7 @@ def main():
             # Get file size
             size = output_file.stat().st_size
             size_mb = size / (1024 * 1024)
+            print(f"  Files processed: {len(geojsonseq_files)}")
             print(f"  Size: {size_mb:.1f} MB")
             print()
             print("Pipeline complete!")
@@ -85,7 +80,9 @@ def main():
             
             return 0
         else:
-            print(f"✗ tippecanoe failed: {result.stderr}")
+            print(f"✗ tippecanoe failed (exit code {result.returncode})")
+            if result.stderr:
+                print(f"Error output:\n{result.stderr}")
             return 1
     
     except subprocess.TimeoutExpired:

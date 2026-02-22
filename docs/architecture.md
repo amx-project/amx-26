@@ -9,17 +9,16 @@ Architecture and design patterns for AMX-26 project
 #   │
 #   └─→ Raw Data (GML/WFS)
 #       │
-#       ├─→ Parse & Normalize (country/scripts/convert.py)
-#       │   └─→ Extract cadastral features
+#       ├─→ Extract & Convert (countries/{country}/scripts/download.sh)
+#       │   └─→ GeoJSONSeq per resource (data/sources/{country}/geojsonseq)
 #       │
 #       ├─→ Validate (common/lib)
 #       │   └─→ Check INSPIRE compliance
 #       │
 #       ├─→ Tile Generation (tippecanoe)
-#       │   └─→ Generate vector tiles
+#       │   └─→ Stream GeoJSONSeq into PMTiles
 #       │
-#       └─→ PMTiles Archive (common/lib)
-#           └─→ countries/{country}/data/output/{country}-cadastre.pmtiles
+#       └─→ PMTiles Archive (data/output/{country}.pmtiles)
 #
 # Deployment
 #   │

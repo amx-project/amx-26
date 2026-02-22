@@ -75,20 +75,20 @@ while IFS= read -r LAYER_NAME; do
     MAXZOOM=18
     case "$LAYER_NAME" in
         CadastralBoundary)
-            MINZOOM=9
+            MINZOOM=16
             MAXZOOM=18
             ;;
         CadastralZoning)
-            MINZOOM=10
-            MAXZOOM=18
+            MINZOOM=5
+            MAXZOOM=13
             ;;
         CadastralParcel)
             MINZOOM=14
-            MAXZOOM=19
+            MAXZOOM=18
             ;;
     esac
 
-    if ! ogr2ogr -f GeoJSONSeq /vsistdout/ "$OGR_SOURCE" "$LAYER_NAME" 2>/dev/null | \
+    if ! ogr2ogr -f GeoJSONSeq -lco COORDINATE_PRECISION=10 /vsistdout/ "$OGR_SOURCE" "$LAYER_NAME" 2>/dev/null | \
         jq -c --arg layer "$LAYER_NAME" --argjson minzoom "$MINZOOM" --argjson maxzoom "$MAXZOOM" \
             '.tippecanoe = {"layer": $layer, "minzoom": $minzoom, "maxzoom": $maxzoom} | .' \
             >> "$TEMP_FILE"; then
