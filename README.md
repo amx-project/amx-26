@@ -79,8 +79,8 @@ just feed-info cz
 just download cz
 
 # Optional: control download concurrency
-# SAMPLE_SIZE=0 processes all feeds, PARALLEL_JOBS controls parallelism
-SAMPLE_SIZE=0 PARALLEL_JOBS=2 just download cz
+# SAMPLE_SIZE=-1 processes all feeds (0 also works), PARALLEL_JOBS controls parallelism
+SAMPLE_SIZE=-1 PARALLEL_JOBS=2 just download cz
 
 # Step 4: Convert to PMTiles
 just convert cz
@@ -144,6 +144,9 @@ Note: PMTiles metadata shows global minzoom/maxzoom (0-18) for all layers, but a
 **Tippecanoe Settings**:
 - Do not drop features: `--no-feature-limit`
 - Increase per-tile size limit: `--maximum-tile-bytes 1000000`
+- Temporary directory: `./tmp/amx-26-cz/tippecanoe-tmp` (avoids small system temp space)
+- Progress display: Real-time processing progress shown during conversion
+- Processing may take several hours for full dataset (44 GB, 84M+ features)
 
 ### France (fr)
 - Status: Planned

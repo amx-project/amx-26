@@ -75,6 +75,9 @@ Generated PMTiles file:
 **Tippecanoe Settings**:
 - Do not drop features: `--no-feature-limit`
 - Increase per-tile size limit: `--maximum-tile-bytes 1000000`
+- Temporary directory: `./tmp/amx-26-cz/tippecanoe-tmp` (avoids small system temp space)
+- Progress display: Real-time processing progress shown during conversion
+- Processing may take several hours for full dataset (44 GB, 84M+ features)
 
 ## Status
 

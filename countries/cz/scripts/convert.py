@@ -8,6 +8,7 @@ Pipeline: download.sh generates combined.geojsonseq → tippecanoe → PMTiles
 
 import sys
 import subprocess
+import os
 from pathlib import Path
 
 # Add common library to path
@@ -19,7 +20,7 @@ def main():
     
     output_dir = root_dir / "data" / "output"
     output_file = output_dir / "cz.pmtiles"
-    temp_dir = Path("/tmp/amx-26-cz")
+    temp_dir = root_dir / "tmp" / "amx-26-cz"
     geojsonseq_dir = root_dir / "data" / "sources" / "cz" / "geojsonseq"
     geojsonseq_file = temp_dir / "combined.geojsonseq"
     
@@ -45,11 +46,24 @@ def main():
 
     print(f"✓ Found GeoJSONSeq files: {len(geojsonseq_files)}")
     print(f"  Directory: {geojsonseq_dir}")
+    
+    # Calculate total input size
+    total_size = sum(p.stat().st_size for p in geojsonseq_files)
+    total_size_gb = total_size / (1024**3)
+    print(f"  Total input size: {total_size_gb:.2f} GB")
     print()
 
     # Step 2: Stream GeoJSONSeq files to tippecanoe via shell pipe
     # Use ls|grep|xargs to avoid wildcard length limits.
     print("Step 2: Streaming GeoJSONSeq to tippecanoe...")
+    print(f"  Processing {len(geojsonseq_files)} files (this may take 30-60 minutes)...")
+    print(f"  tippecanoe progress will be shown below:")
+    print()
+    
+    # Set tippecanoe temp directory to avoid small system temp space
+    tippecanoe_temp = temp_dir / "tippecanoe-tmp"
+    tippecanoe_temp.mkdir(parents=True, exist_ok=True)
+    
     try:
         cmd = (
             f'ls -1 "{geojsonseq_dir}" | '
@@ -57,16 +71,24 @@ def main():
             f'sed "s#^#{geojsonseq_dir}/#" | '
             f'xargs cat | tippecanoe -f -z 18 -Z 0 -o "{output_file}" --no-feature-limit --maximum-tile-bytes 1000000'
         )
+        
+        env = os.environ.copy()
+        env["TMPDIR"] = str(tippecanoe_temp)
+        
+        # Run with stderr visible for progress reporting
+        # No timeout - let tippecanoe complete regardless of duration
         result = subprocess.run(
             cmd,
             shell=True,
-            capture_output=True,
+            stderr=None,  # Show tippecanoe's progress output
+            stdout=subprocess.PIPE,
             text=True,
-            timeout=600,
-            cwd=root_dir
+            cwd=root_dir,
+            env=env
         )
         
         if result.returncode == 0:
+            print()
             print(f"✓ Successfully generated: {output_file}")
             
             # Get file size
@@ -80,14 +102,11 @@ def main():
             
             return 0
         else:
+            print()
             print(f"✗ tippecanoe failed (exit code {result.returncode})")
-            if result.stderr:
-                print(f"Error output:\n{result.stderr}")
+            print("  Check the error messages above for details")
             return 1
     
-    except subprocess.TimeoutExpired:
-        print("✗ tippecanoe timeout (exceeded 10 minutes)")
-        return 1
     except Exception as e:
         print(f"✗ Error running tippecanoe: {e}")
         return 1

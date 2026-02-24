@@ -147,9 +147,11 @@ just status
 
 ### Temporary Files
 
-- Generated in `/tmp/amx-26-*`
+- Generated in `./tmp/amx-26-*` (project-local temp directory)
+- tippecanoe uses `./tmp/amx-26-cz/tippecanoe-tmp` for large conversions
 - Automatically cleaned up by scripts
 - Safe to delete manually if needed
+- Excluded from git via .gitignore
 
 ## Known Limitations & TODOs
 
