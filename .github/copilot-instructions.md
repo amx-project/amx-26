@@ -153,6 +153,84 @@ just status
 - Safe to delete manually if needed
 - Excluded from git via .gitignore
 
+## Web Viewer
+
+Prototype web map viewer at `/web/` directory:
+
+- **URL**: https://amx-project.github.io/amx-26/
+- **Stack**: Vite + MapLibre GL JS + Protomaps basemaps (system fonts, no glyphs)
+- **Build**: Single HTML file output to `docs/` for GitHub Pages
+- **Justfile commands**:
+  - `just site-install` - Install dependencies
+  - `just site-dev` - Development server (with --host for network access)
+  - `just site-build` - Production build to docs/
+  - `just site-preview` - Preview production build (with --host)
+
+**Key Features**:
+- Czech cadastral layers (zoning z5-14, parcels z13-23, boundaries z13-23)
+- Red outlines for all cadastral features, transparent fills
+- Labels for zoning (z12-14) and parcels (z16.5-23)
+- 3D terrain with hillshade (dark theme: white highlights, exaggeration 1.0)
+- Layer control for visibility/opacity
+- Parcel info on hover (label, area, nationalCadastralReference)
+- Loading overlay during tile streaming
+- Hash navigation for location sharing
+
+**Data Sources**:
+- `pmtiles://https://tunnel.optgeo.org/cz.pmtiles`
+- Basemap: `https://tunnel.optgeo.org/martin/protomaps-basemap` (maxzoom 15)
+- Terrain: `https://tunnel.optgeo.org/martin/mapterhorn` (maxzoom 12, terrarium encoding)
+- Map maxZoom: 22 (with overzooming)
+
+## Optimization Tools
+
+### vt-optimizer-rs
+
+[vt-optimizer-rs](https://github.com/unvt/vt-optimizer-rs) is used for vector tile inspection and optimization:
+
+**Installation** (requires Rust):
+```bash
+git clone https://github.com/unvt/vt-optimizer-rs.git /tmp/vt-optimizer-rs
+cd /tmp/vt-optimizer-rs
+cargo build --release
+cp target/release/vt-optimizer ~/.cargo/bin/
+```
+
+**Usage**:
+```bash
+# Inspect PMTiles structure
+vt-optimizer inspect data/output/cz.pmtiles
+
+# JSON output for programmatic analysis
+vt-optimizer inspect data/output/cz.pmtiles --report-format json > report.json
+
+# Optimize with style-based filtering (future)
+vt-optimizer optimize input.pmtiles --output output.pmtiles --style style.json
+```
+
+**Current Czech PMTiles Stats** (as of optimization phase):
+- Size: 21GB
+- Tiles: 10,744,660 (10.1M entries)
+- Layers: CadastralBoundary (62M features), CadastralParcel (22M features), CadastralZoning (13K features)
+- Average tile size: 2.07KB
+- Max tile size: 898KB
+- Compression: gzip
+
+### Attribute Reduction Strategy
+
+Web viewer analysis shows most attributes are unused. Reduction targets:
+
+- **CadastralBoundary**: Keep `estimatedAccuracy`, `estimatedAccuracy_uom` only (precision metadata)
+- **CadastralParcel**: Keep `label`, `areaValue`, `areaValue_uom`, `nationalCadastralReference`
+- **CadastralZoning**: Keep `label` only
+
+**Implementation**: Use tippecanoe `--exclude` option in convert.py to filter attributes during generation (preserves source GeoJSONSeq files).
+
+**Goals**:
+- Reduce file size by 30-50%
+- Maintain all display/interaction functionality
+- Preserve source data for future regeneration
+
 ## Known Limitations & TODOs
 
 1. **ČÚZK Network**: Very slow (1-2 min to fetch full ATOM feed)
@@ -164,8 +242,9 @@ just status
 3. **GML Parsing**: Complex INSPIRE schemas
    - Solution: Use ogr2ogr for robust handling; test with sample regions first
 
-4. **PMTiles Size**: Full Czech cadastre will be very large (~500MB+)
-   - Solution: Consider regional splits or zoom level optimization
+4. **PMTiles Size**: Full Czech cadastre is 21GB (larger than initially estimated)
+   - Solution: Attribute reduction via tippecanoe --exclude (targeting 30-50% reduction)
+   - Future: vt-optimizer-rs style-based layer filtering
 
 ## Reference Materials
 
@@ -176,10 +255,12 @@ just status
 
 ## Maintainer Notes
 
-- **Current Focus**: Getting Czechia prototype working end-to-end
-- **Next Phase**: Scale to France and additional countries
+- **Current Focus**: Measuring PMTiles optimization results for Czechia
+- **Completed**: End-to-end pipeline (download → convert → PMTiles), web viewer deployment, attribute reduction implementation
+- **In Progress**: Generating optimized PMTiles and measuring file size reduction
+- **Next Phase**: Re-deploy optimized tiles, then scale to France
 - **Long-term**: Automated CI/CD pipeline (currently manual via Justfile)
 
 ---
 
-**Last Updated**: February 22, 2026
+**Last Updated**: February 25, 2026

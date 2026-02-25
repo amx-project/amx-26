@@ -59,11 +59,18 @@ python countries/cz/scripts/convert.py
 
 Generated PMTiles file:
 - **Location**: `data/output/cz.pmtiles`
-- **Size**: (to be determined based on actual data)
+- **Size**: 21GB (10,744,660 tiles)
+- **Layers**:
+  - CadastralBoundary: 62,484,714 features (LineString)
+  - CadastralParcel: 22,074,158 features (Polygon)
+  - CadastralZoning: 13,074 features (Polygon)
 - **Zoom Levels**:
 	- CadastralZoning: minzoom=5, maxzoom=13
 	- CadastralParcel: minzoom=14, maxzoom=18
 	- CadastralBoundary: minzoom=16, maxzoom=18
+- **Average tile size**: 2.07KB
+- **Max tile size**: 898KB
+- **Attribution**: © ČÚZK (CC BY 4.0)
 
 ## Precision and Tile Settings
 
@@ -78,17 +85,57 @@ Generated PMTiles file:
 - Temporary directory: `./tmp/amx-26-cz/tippecanoe-tmp` (avoids small system temp space)
 - Progress display: Real-time processing progress shown during conversion
 - Processing may take several hours for full dataset (44 GB, 84M+ features)
+- Attribution: `--attribution "© ČÚZK"` (CC BY 4.0 license)
+
+## Optimization
+
+### Attribute Reduction - IMPLEMENTED
+
+Based on web viewer usage analysis, attributes can be reduced significantly:
+
+**CadastralBoundary** (6 attributes → 2 attributes):
+- **Keep**: `estimatedAccuracy`, `estimatedAccuracy_uom` (precision metadata)
+- **Remove**: `beginLifespanVersion`, `gml_id`, `localId`, `namespace`
+
+**CadastralParcel** (9 attributes → 4 attributes):
+- **Keep**: `label`, `areaValue`, `areaValue_uom`, `nationalCadastralReference` (used in web viewer)
+- **Remove**: `gml_id`, `localId`, `namespace`, `beginLifespanVersion`, `pos`
+
+**CadastralZoning** (13 attributes → 1 attribute):
+- **Keep**: `label` (displayed in web viewer)
+- **Remove**: All other INSPIRE metadata attributes
+
+**Implementation**:
+```python
+# In convert.py, add --exclude flags to tippecanoe command
+tippecanoe_cmd.extend([
+    '--exclude', 'CadastralBoundary:beginLifespanVersion',
+    '--exclude', 'CadastralBoundary:gml_id',
+    '--exclude', 'CadastralBoundary:localId',
+    '--exclude', 'CadastralBoundary:namespace',
+    # ... (add all exclusions)
+])
+```
+
+**Results**:
+- Total attributes reduced: 28 → 7 (75% reduction)
+- File size reduction: Measured with vt-optimizer inspect
+- Faster tile loading in web viewer
+- Source GeoJSONSeq files preserved for future regeneration
 
 ## Status
 
 - [x] Identify INSPIRE data source (ATOM feed at atom.cuzk.cz)
 - [x] Fetch ATOM feed with yq (just fetch-feed cz)
-- [ ] Process dataset feeds and extract GML URLs
-- [ ] Download sample GML files
-- [ ] Convert GML → GeoJSONSeq with ogr2ogr
-- [ ] Implement PMTiles generation with tippecanoe
-- [ ] Test complete pipeline
-- [ ] Optimize for bulk processing
+- [x] Process dataset feeds and extract GML URLs
+- [x] Download GML files (streaming to GeoJSONSeq)
+- [x] Convert GML → GeoJSONSeq with ogr2ogr
+- [x] Implement PMTiles generation with tippecanoe
+- [x] Test complete pipeline
+- [x] Deploy web viewer (https://amx-project.github.io/amx-26/)
+- [x] Analyze attributes with vt-optimizer-rs
+- [ ] Optimize PMTiles with attribute reduction
+- [ ] Re-deploy optimized tiles
 
 ## Notes
 

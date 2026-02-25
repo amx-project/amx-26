@@ -65,12 +65,40 @@ def main():
     tippecanoe_temp.mkdir(parents=True, exist_ok=True)
     
     try:
+        # Attribute exclusion strategy based on web viewer usage analysis
+        # CadastralBoundary: keep estimatedAccuracy, estimatedAccuracy_uom (precision metadata)
+        # CadastralParcel: keep label, areaValue, areaValue_uom, nationalCadastralReference
+        # CadastralZoning: keep label only
         cmd = (
             f'ls -1 "{geojsonseq_dir}" | '
             r'grep -E "\.geojsonseq$" | '
             f'sed "s#^#{geojsonseq_dir}/#" | '
             f'xargs cat | tippecanoe -f -z 18 -Z 0 -o "{output_file}" '
-            f'--attribution "© ČÚZK" --no-feature-limit --maximum-tile-bytes 1000000'
+            f'--attribution "© ČÚZK" --no-feature-limit --maximum-tile-bytes 1000000 '
+            # CadastralBoundary: remove 4 attributes (keep 2: estimatedAccuracy, estimatedAccuracy_uom)
+            f'--exclude CadastralBoundary:beginLifespanVersion '
+            f'--exclude CadastralBoundary:gml_id '
+            f'--exclude CadastralBoundary:localId '
+            f'--exclude CadastralBoundary:namespace '
+            # CadastralParcel: remove 5 attributes (keep 4: label, areaValue, areaValue_uom, nationalCadastralReference)
+            f'--exclude CadastralParcel:gml_id '
+            f'--exclude CadastralParcel:localId '
+            f'--exclude CadastralParcel:namespace '
+            f'--exclude CadastralParcel:beginLifespanVersion '
+            f'--exclude CadastralParcel:pos '
+            # CadastralZoning: remove 12 attributes (keep 1: label)
+            f'--exclude CadastralZoning:LocalisedCharacterString '
+            f'--exclude CadastralZoning:beginLifespanVersion '
+            f'--exclude CadastralZoning:gml_id '
+            f'--exclude CadastralZoning:localId '
+            f'--exclude CadastralZoning:namespace '
+            f'--exclude CadastralZoning:nationalCadastalZoningReference '
+            f'--exclude CadastralZoning:originalMapScaleDenominator '
+            f'--exclude CadastralZoning:pos '
+            f'--exclude CadastralZoning:script '
+            f'--exclude CadastralZoning:sourceOfName '
+            f'--exclude CadastralZoning:text '
+            f'--exclude CadastralZoning:language'
         )
         
         env = os.environ.copy()

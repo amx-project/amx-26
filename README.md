@@ -147,11 +147,97 @@ Note: PMTiles metadata shows global minzoom/maxzoom (0-18) for all layers, but a
 - Temporary directory: `./tmp/amx-26-cz/tippecanoe-tmp` (avoids small system temp space)
 - Progress display: Real-time processing progress shown during conversion
 - Processing may take several hours for full dataset (44 GB, 84M+ features)
+- Attribution: `--attribution "© ČÚZK"` (CC BY 4.0 license)
+
+**Current Status**:
+- Generated PMTiles: 21GB (10.7M tiles, z0-18)
+- Layers: CadastralBoundary (62M features), CadastralParcel (22M features), CadastralZoning (13K features)
+- Average tile size: 2.07KB
 
 ### France (fr)
 - Status: Planned
 - Format: To be determined
 - Target: `fr.pmtiles`
+
+## Web Viewer
+
+Interactive web map viewer for Czech cadastral data:
+
+- **URL**: https://amx-project.github.io/amx-26/
+- **Tech Stack**: Vite + MapLibre GL JS + Protomaps basemaps
+- **Features**:
+  - Czech cadastral layers (zoning, parcels, boundaries) with red outlines
+  - Labels for cadastral zones and parcels
+  - 3D terrain with hillshade (dark theme optimized)
+  - Layer control for visibility/opacity management
+  - Parcel information on hover (label, area, national reference)
+  - Loading overlay during tile streaming
+  - Hash-based navigation for sharing locations
+
+**Local Development**:
+```bash
+# Install dependencies
+just site-install
+
+# Run development server
+just site-dev
+
+# Build for production (outputs to docs/)
+just site-build
+
+# Preview production build
+just site-preview
+```
+
+**Data Sources**:
+- Cadastral PMTiles: `pmtiles://https://tunnel.optgeo.org/cz.pmtiles`
+- Basemap: Protomaps (OpenStreetMap data)
+- Terrain: Matterhorn DEM (terrarium encoding)
+
+## Optimization
+
+### PMTiles Optimization with vt-optimizer-rs
+
+The project uses [vt-optimizer-rs](https://github.com/unvt/vt-optimizer-rs) to analyze and optimize vector tiles:
+
+```bash
+# Install vt-optimizer-rs (requires Rust)
+git clone https://github.com/unvt/vt-optimizer-rs.git /tmp/vt-optimizer-rs
+cd /tmp/vt-optimizer-rs
+cargo build --release
+cp target/release/vt-optimizer ~/.cargo/bin/
+
+# Inspect PMTiles structure
+vt-optimizer inspect data/output/cz.pmtiles
+
+# Inspect with JSON output for analysis
+vt-optimizer inspect data/output/cz.pmtiles --report-format json > cz-report.json
+```
+
+### Attribute Reduction Strategy
+
+Based on web viewer usage analysis, the following attributes can be removed to reduce file size:
+
+**CadastralBoundary** (6 attributes → 2 attributes):
+- **Keep**: `estimatedAccuracy`, `estimatedAccuracy_uom` (precision metadata)
+- **Remove**: `beginLifespanVersion`, `gml_id`, `localId`, `namespace`
+
+**CadastralParcel** (9 attributes → 4 attributes):
+- **Keep**: `label`, `areaValue`, `areaValue_uom`, `nationalCadastralReference`
+- **Remove**: `gml_id`, `localId`, `namespace`, `beginLifespanVersion`, `pos`
+
+**CadastralZoning** (13 attributes → 1 attribute):
+- **Keep**: `label`
+- **Remove**: `LocalisedCharacterString`, `beginLifespanVersion`, `gml_id`, `localId`, `namespace`, `nationalCadastalZoningReference`, `originalMapScaleDenominator`, `pos`, `script`, `sourceOfName`, `text`, `language`
+
+**Implementation**:
+Use tippecanoe's `--exclude` option in `countries/cz/scripts/convert.py` to filter attributes during PMTiles generation. This preserves source GeoJSONSeq files while reducing output size.
+
+**Benefits**:
+- Reduced tile file size (expected 30-50% reduction)
+- Faster tile transmission and display
+- Lower bandwidth requirements
+- Improved performance in web viewer and other clients
 
 ## Development
 
