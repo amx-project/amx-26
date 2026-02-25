@@ -197,6 +197,19 @@ test-remote:
 # Development Commands
 # ============================================================================
 
+# Site Commands
+site-install:
+	@cd web && npm install
+
+site-dev:
+	@cd web && npm run dev
+
+site-build:
+	@cd web && npm run build
+
+site-preview:
+	@cd web && npm run preview -- --host
+
 # Initialize development environment
 init:
 	#!/bin/zsh

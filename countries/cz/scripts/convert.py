@@ -69,7 +69,8 @@ def main():
             f'ls -1 "{geojsonseq_dir}" | '
             r'grep -E "\.geojsonseq$" | '
             f'sed "s#^#{geojsonseq_dir}/#" | '
-            f'xargs cat | tippecanoe -f -z 18 -Z 0 -o "{output_file}" --no-feature-limit --maximum-tile-bytes 1000000'
+            f'xargs cat | tippecanoe -f -z 18 -Z 0 -o "{output_file}" '
+            f'--attribution "© ČÚZK" --no-feature-limit --maximum-tile-bytes 1000000'
         )
         
         env = os.environ.copy()

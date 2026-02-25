@@ -6,23 +6,23 @@ Architecture and design patterns for AMX-26 project
 # ============================================================================
 #
 # INSPIRE Sources (Country-specific)
-#   │
-#   └─→ Raw Data (GML/WFS)
-#       │
-#       ├─→ Extract & Convert (countries/{country}/scripts/download.sh)
-#       │   └─→ GeoJSONSeq per resource (data/sources/{country}/geojsonseq)
-#       │
-#       ├─→ Validate (common/lib)
-#       │   └─→ Check INSPIRE compliance
-#       │
-#       ├─→ Tile Generation (tippecanoe)
-#       │   └─→ Stream GeoJSONSeq into PMTiles
-#       │
-#       └─→ PMTiles Archive (data/output/{country}.pmtiles)
+#   |
+#   +-+ Raw Data (GML/WFS)
+#       |
+#       +-+ Extract & Convert (countries/{country}/scripts/download.sh)
+#       |   +-+ GeoJSONSeq per resource (data/sources/{country}/geojsonseq)
+#       |
+#       +-+ Validate (common/lib)
+#       |   +-+ Check INSPIRE compliance
+#       |
+#       +-+ Tile Generation (tippecanoe)
+#       |   +-+ Stream GeoJSONSeq into PMTiles
+#       |
+#       +-+ PMTiles Archive (data/output/{country}.pmtiles)
 #
 # Deployment
-#   │
-#   └─→ rsync to pod@pod.local:/home/pod/x-24b/data/
+#   |
+#   +-+ rsync to pod@pod.local:/home/pod/x-24b/data/
 #
 
 # Design Principles
@@ -40,7 +40,7 @@ Architecture and design patterns for AMX-26 project
 #
 # Phase 1: Czechia (First Country)
 #   - Identify INSPIRE data source
-#   - Implement basic GML→PMTiles pipeline
+#   - Implement basic GML->PMTiles pipeline
 #   - Test rsync deployment
 #   - Document process
 #

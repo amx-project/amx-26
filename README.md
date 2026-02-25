@@ -171,12 +171,24 @@ Place reusable conversion logic in `common/lib/`. For example:
 
 ## Deployment
 
+### Upload to Pod Server
+
 Files are hosted via rsync to a remote pod server:
 
 ```bash
 just upload cz
 # Executes: rsync -av data/output/cz.pmtiles pod@pod.local:/home/pod/x-24b/data/
 ```
+
+### Tile Access URLs
+
+Once deployed, Czech cadastral tiles are available at:
+
+- **PMTiles (direct)**: https://tunnel.optgeo.org/cz.pmtiles
+- **TileJSON metadata**: https://tunnel.optgeo.org/martin/cz
+- **XYZ tiles**: https://tunnel.optgeo.org/martin/cz/{z}/{x}/{y}
+
+The `martin` server provides TileJSON compatibility for web mapping libraries (Leaflet, Mapbox GL, etc.)
 
 ## References
 

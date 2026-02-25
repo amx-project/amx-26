@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AMX-26 | Czechia Cadastral Map</title>
+    <meta name="description" content="AMX-26 Czechia cadastral tiles with MapLibre GL JS." />
+  </head>
+  <body>
+    <div id="app">
+      <div id="map"></div>
+      <div class="loading-pane is-active" id="loading-pane" aria-live="polite">
+        <div class="loading-card">
+          <div class="loading-sub">Streaming new tiles.</div>
+        </div>
+      </div>
+      <div class="status" id="status">AMX-26 Czechia Cadastral Map</div>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

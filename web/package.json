@@ -1,0 +1,25 @@
+{
+  "name": "amx-26-map",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "generate:style": "node scripts/generate-style.js",
+    "predev": "npm run generate:style",
+    "dev": "vite --host",
+    "prebuild": "npm run generate:style",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@protomaps/basemaps": "^5.7.0",
+    "maplibre-gl": "^5.14.0",
+    "maplibre-gl-layer-control": "^0.14.0",
+    "pmtiles": "^3.0.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.4",
+    "vite": "^6.1.0",
+    "vite-plugin-singlefile": "^2.0.1"
+  }
+}

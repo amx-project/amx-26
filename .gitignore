@@ -15,6 +15,11 @@ tmp/
 countries/*/temp/
 countries/*/tmp/
 
+# Web (Vite)
+web/node_modules/
+web/.vite/
+web/src/protomaps-style.json
+
 # ATOM feed (regenerate with 'just fetch-feed')
 # Keep cz.json for reference, but regenerate if outdated:
 # data/sources/cz/cz.json
