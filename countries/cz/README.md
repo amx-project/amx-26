@@ -59,7 +59,7 @@ python countries/cz/scripts/convert.py
 
 Generated PMTiles file:
 - **Location**: `data/output/cz.pmtiles`
-- **Size**: 21GB (10,744,660 tiles)
+- **Size**: 13GB (10,744,660 tiles, optimized)
 - **Layers**:
   - CadastralBoundary: 62,484,714 features (LineString)
   - CadastralParcel: 22,074,158 features (Polygon)
@@ -68,8 +68,8 @@ Generated PMTiles file:
 	- CadastralZoning: minzoom=5, maxzoom=13
 	- CadastralParcel: minzoom=14, maxzoom=18
 	- CadastralBoundary: minzoom=16, maxzoom=18
-- **Average tile size**: 2.07KB
-- **Max tile size**: 898KB
+- **Average tile size**: 1.29KB
+- **Max tile size**: 504KB
 - **Attribution**: © ČÚZK (CC BY 4.0)
 
 ## Precision and Tile Settings
@@ -106,22 +106,57 @@ Based on web viewer usage analysis, attributes can be reduced significantly:
 - **Remove**: All other INSPIRE metadata attributes
 
 **Implementation**:
-```python
-# In convert.py, add --exclude flags to tippecanoe command
-tippecanoe_cmd.extend([
-    '--exclude', 'CadastralBoundary:beginLifespanVersion',
-    '--exclude', 'CadastralBoundary:gml_id',
-    '--exclude', 'CadastralBoundary:localId',
-    '--exclude', 'CadastralBoundary:namespace',
-    # ... (add all exclusions)
-])
+Filtering happens during GeoJSONSeq generation in `countries/cz/scripts/process_feed.sh`:
+```bash
+# Layer-specific property filter used by jq
+FILTER_PROPS='{estimatedAccuracy, estimatedAccuracy_uom}'
+# ... (set per layer)
+
+ogr2ogr ... | jq -c ".properties |= $FILTER_PROPS | .tippecanoe = {layer: \"$LAYER_NAME\", minzoom: $MINZOOM, maxzoom: $MAXZOOM}"
 ```
 
 **Results**:
 - Total attributes reduced: 28 → 7 (75% reduction)
-- File size reduction: Measured with vt-optimizer inspect
+- File size reduction: 21GB → 13GB (about 38%)
+- Average tile size reduction: 2.07KB → 1.29KB (about 37%)
 - Faster tile loading in web viewer
 - Source GeoJSONSeq files preserved for future regeneration
+
+**vt-optimizer report excerpt** (from `tmp/cz_report.json`):
+```json
+{
+	"overall": {
+		"tile_count": 10744660,
+		"total_bytes": 14158698421,
+		"avg_bytes": 1317,
+		"max_bytes": 516523
+	},
+	"vector_layers": [
+		{
+			"id": "CadastralBoundary",
+			"fields": {
+				"estimatedAccuracy": "Number",
+				"estimatedAccuracy_uom": "String"
+			}
+		},
+		{
+			"id": "CadastralParcel",
+			"fields": {
+				"areaValue": "Number",
+				"areaValue_uom": "String",
+				"label": "Mixed",
+				"nationalCadastralReference": "String"
+			}
+		},
+		{
+			"id": "CadastralZoning",
+			"fields": {
+				"label": "String"
+			}
+		}
+	]
+}
+```
 
 ## Status
 
@@ -134,7 +169,7 @@ tippecanoe_cmd.extend([
 - [x] Test complete pipeline
 - [x] Deploy web viewer (https://amx-project.github.io/amx-26/)
 - [x] Analyze attributes with vt-optimizer-rs
-- [ ] Optimize PMTiles with attribute reduction
+- [x] Optimize PMTiles with attribute reduction
 - [ ] Re-deploy optimized tiles
 
 ## Notes

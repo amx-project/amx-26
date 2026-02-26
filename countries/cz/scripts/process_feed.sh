@@ -73,24 +73,32 @@ while IFS= read -r LAYER_NAME; do
 
     MINZOOM=14
     MAXZOOM=18
+    FILTER_PROPS='.'  # Default: keep all properties
+    
     case "$LAYER_NAME" in
         CadastralBoundary)
             MINZOOM=16
             MAXZOOM=18
+            # Keep only: estimatedAccuracy, estimatedAccuracy_uom
+            FILTER_PROPS='{estimatedAccuracy, estimatedAccuracy_uom}'
             ;;
         CadastralZoning)
             MINZOOM=5
             MAXZOOM=13
+            # Keep only: label
+            FILTER_PROPS='{label}'
             ;;
         CadastralParcel)
             MINZOOM=14
             MAXZOOM=18
+            # Keep only: label, areaValue, areaValue_uom, nationalCadastralReference
+            FILTER_PROPS='{label, areaValue, areaValue_uom, nationalCadastralReference}'
             ;;
     esac
 
     if ! ogr2ogr -f GeoJSONSeq -lco COORDINATE_PRECISION=10 /vsistdout/ "$OGR_SOURCE" "$LAYER_NAME" 2>/dev/null | \
         jq -c --arg layer "$LAYER_NAME" --argjson minzoom "$MINZOOM" --argjson maxzoom "$MAXZOOM" \
-            '.tippecanoe = {"layer": $layer, "minzoom": $minzoom, "maxzoom": $maxzoom} | .' \
+            ".properties |= $FILTER_PROPS | .tippecanoe = {\"layer\": \$layer, \"minzoom\": \$minzoom, \"maxzoom\": \$maxzoom}" \
             >> "$TEMP_FILE"; then
         echo "  ✗ Failed to convert layer: $LAYER_NAME"
     fi

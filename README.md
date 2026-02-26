@@ -150,9 +150,10 @@ Note: PMTiles metadata shows global minzoom/maxzoom (0-18) for all layers, but a
 - Attribution: `--attribution "© ČÚZK"` (CC BY 4.0 license)
 
 **Current Status**:
-- Generated PMTiles: 21GB (10.7M tiles, z0-18)
+- Generated PMTiles: 13GB (10.7M tiles, z0-18, optimized)
 - Layers: CadastralBoundary (62M features), CadastralParcel (22M features), CadastralZoning (13K features)
-- Average tile size: 2.07KB
+- Average tile size: 1.29KB
+- Max tile size: 504KB
 
 ### France (fr)
 - Status: Planned
@@ -231,13 +232,50 @@ Based on web viewer usage analysis, the following attributes can be removed to r
 - **Remove**: `LocalisedCharacterString`, `beginLifespanVersion`, `gml_id`, `localId`, `namespace`, `nationalCadastalZoningReference`, `originalMapScaleDenominator`, `pos`, `script`, `sourceOfName`, `text`, `language`
 
 **Implementation**:
-Use tippecanoe's `--exclude` option in `countries/cz/scripts/convert.py` to filter attributes during PMTiles generation. This preserves source GeoJSONSeq files while reducing output size.
+Attributes are filtered during GeoJSONSeq generation via jq in `countries/cz/scripts/process_feed.sh`, so tippecanoe ingests already-trimmed features.
 
 **Benefits**:
-- Reduced tile file size (expected 30-50% reduction)
+- Reduced tile file size (observed 21GB → 13GB, about 38%)
+- Reduced average tile size (2.07KB → 1.29KB, about 37%)
 - Faster tile transmission and display
 - Lower bandwidth requirements
 - Improved performance in web viewer and other clients
+
+**vt-optimizer report excerpt** (from `tmp/cz_report.json`):
+```json
+{
+  "overall": {
+    "tile_count": 10744660,
+    "total_bytes": 14158698421,
+    "avg_bytes": 1317,
+    "max_bytes": 516523
+  },
+  "vector_layers": [
+    {
+      "id": "CadastralBoundary",
+      "fields": {
+        "estimatedAccuracy": "Number",
+        "estimatedAccuracy_uom": "String"
+      }
+    },
+    {
+      "id": "CadastralParcel",
+      "fields": {
+        "areaValue": "Number",
+        "areaValue_uom": "String",
+        "label": "Mixed",
+        "nationalCadastralReference": "String"
+      }
+    },
+    {
+      "id": "CadastralZoning",
+      "fields": {
+        "label": "String"
+      }
+    }
+  ]
+}
+```
 
 ## Development
 

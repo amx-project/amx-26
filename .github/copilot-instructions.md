@@ -209,12 +209,48 @@ vt-optimizer optimize input.pmtiles --output output.pmtiles --style style.json
 ```
 
 **Current Czech PMTiles Stats** (as of optimization phase):
-- Size: 21GB
+- Size: 13GB
 - Tiles: 10,744,660 (10.1M entries)
 - Layers: CadastralBoundary (62M features), CadastralParcel (22M features), CadastralZoning (13K features)
-- Average tile size: 2.07KB
-- Max tile size: 898KB
+- Average tile size: 1.29KB
+- Max tile size: 504KB
 - Compression: gzip
+
+**vt-optimizer report excerpt** (from `tmp/cz_report.json`):
+```json
+{
+  "overall": {
+    "tile_count": 10744660,
+    "total_bytes": 14158698421,
+    "avg_bytes": 1317,
+    "max_bytes": 516523
+  },
+  "vector_layers": [
+    {
+      "id": "CadastralBoundary",
+      "fields": {
+        "estimatedAccuracy": "Number",
+        "estimatedAccuracy_uom": "String"
+      }
+    },
+    {
+      "id": "CadastralParcel",
+      "fields": {
+        "areaValue": "Number",
+        "areaValue_uom": "String",
+        "label": "Mixed",
+        "nationalCadastralReference": "String"
+      }
+    },
+    {
+      "id": "CadastralZoning",
+      "fields": {
+        "label": "String"
+      }
+    }
+  ]
+}
+```
 
 ### Attribute Reduction Strategy
 
@@ -224,7 +260,7 @@ Web viewer analysis shows most attributes are unused. Reduction targets:
 - **CadastralParcel**: Keep `label`, `areaValue`, `areaValue_uom`, `nationalCadastralReference`
 - **CadastralZoning**: Keep `label` only
 
-**Implementation**: Use tippecanoe `--exclude` option in convert.py to filter attributes during generation (preserves source GeoJSONSeq files).
+**Implementation**: Filter attributes during GeoJSONSeq generation via jq in `countries/cz/scripts/process_feed.sh` (preserves source data while reducing output).
 
 **Goals**:
 - Reduce file size by 30-50%
@@ -242,8 +278,8 @@ Web viewer analysis shows most attributes are unused. Reduction targets:
 3. **GML Parsing**: Complex INSPIRE schemas
    - Solution: Use ogr2ogr for robust handling; test with sample regions first
 
-4. **PMTiles Size**: Full Czech cadastre is 21GB (larger than initially estimated)
-   - Solution: Attribute reduction via tippecanoe --exclude (targeting 30-50% reduction)
+4. **PMTiles Size**: Full Czech cadastre is 13GB after attribute reduction (was 21GB)
+  - Solution: Attribute reduction via jq filtering in process_feed.sh
    - Future: vt-optimizer-rs style-based layer filtering
 
 ## Reference Materials
@@ -255,12 +291,12 @@ Web viewer analysis shows most attributes are unused. Reduction targets:
 
 ## Maintainer Notes
 
-- **Current Focus**: Measuring PMTiles optimization results for Czechia
-- **Completed**: End-to-end pipeline (download → convert → PMTiles), web viewer deployment, attribute reduction implementation
-- **In Progress**: Generating optimized PMTiles and measuring file size reduction
+- **Current Focus**: Re-deploy optimized PMTiles for Czechia
+- **Completed**: End-to-end pipeline (download → convert → PMTiles), web viewer deployment, attribute reduction implementation, optimized PMTiles generation
+- **In Progress**: Final verification and deployment
 - **Next Phase**: Re-deploy optimized tiles, then scale to France
 - **Long-term**: Automated CI/CD pipeline (currently manual via Justfile)
 
 ---
 
-**Last Updated**: February 25, 2026
+**Last Updated**: February 27, 2026
